@@ -5,8 +5,12 @@ from backend.app.api import (
     routes_chat,
     routes_documents,
     routes_eval,
+    routes_feedback,
     routes_health,
     routes_ingestion,
+    routes_metrics,
+    routes_prompts,
+    routes_solutions,
 )
 from backend.app.core.config import get_settings
 from backend.app.core.logging import configure_logging
@@ -21,7 +25,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version="0.1.0",
-        description="Public-safe Agentic RAG API using synthetic Northstar Labs data.",
+        description="Public-safe Agentic RAG API using synthetic demo data.",
     )
     app.add_middleware(
         CORSMiddleware,
@@ -35,8 +39,11 @@ def create_app() -> FastAPI:
     app.include_router(routes_chat.router)
     app.include_router(routes_eval.router)
     app.include_router(routes_documents.router)
+    app.include_router(routes_feedback.router)
+    app.include_router(routes_metrics.router)
+    app.include_router(routes_prompts.router)
+    app.include_router(routes_solutions.router)
     return app
 
 
 app = create_app()
-

@@ -38,7 +38,7 @@ class GeneratedAnswer:
 
 
 class GroundedLLMProvider:
-    """OpenAI-compatible service boundary with a local grounded fallback.
+    """LLM-compatible service boundary with a local grounded fallback.
 
     The fallback is intentionally extractive: it only composes answers from retrieved snippets,
     which makes the demo useful without a remote model key and keeps citations honest.

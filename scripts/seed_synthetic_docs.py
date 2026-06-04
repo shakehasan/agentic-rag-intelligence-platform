@@ -17,7 +17,7 @@ created_at: 2026-01-12T00:00:00Z
 ---
 # AI Governance Policy
 
-Northstar Labs uses this synthetic policy to define responsible AI review practices.
+This synthetic policy defines responsible AI review practices for the demo workspace.
 High-impact AI decisions require documented human review before release. Teams must record
 the intended use, user impact, model limitations, evaluation results, and rollback owner.
 
@@ -229,4 +229,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

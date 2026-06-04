@@ -2,13 +2,17 @@
 
 A production-style LangGraph, LangChain, LangSmith, and RAG system for source-grounded enterprise knowledge intelligence using fully synthetic data.
 
+I created this project as a public-safe AI engineering portfolio system. It demonstrates how a modern Agentic RAG platform can orchestrate retrieval, answer generation, guardrails, observability, evaluation, and feedback without relying on private organization data.
+
+The default runtime is free and local. It uses deterministic local embeddings and an extractive grounded-answer fallback, so no paid API key or hosted service is required to run the demo.
+
 ## Public-Safe Demo Notice
 
-This repository uses only synthetic documents from a fictional organization called Northstar Labs. It does not include workplace data, named-customer data, sensitive source material, privately owned system details, or real organization documents. See [docs/public_safety.md](docs/public_safety.md) for the full safety statement.
+This repository uses only synthetic demo documents. It does not include workplace data, named-customer data, sensitive source material, privately owned system details, or real organization documents. See [docs/public_safety.md](docs/public_safety.md) for the full safety statement.
 
 ## Why This Project Exists
 
-Modern LLM applications need more than a prompt and a vector database. Production-grade AI systems require retrieval orchestration, graph-based workflows, source grounding, evaluation, observability, guardrails, and failure handling.
+Modern LLM applications need more than a prompt and a vector database. Production-grade AI systems require retrieval orchestration, graph-based workflows, source grounding, evaluation, observability, guardrails, failure handling, feedback capture, and quality gates.
 
 This project demonstrates those patterns in a public-safe portfolio environment.
 
@@ -16,58 +20,239 @@ This project demonstrates those patterns in a public-safe portfolio environment.
 
 - Agentic RAG architecture
 - LangGraph workflow orchestration
-- LangChain retrieval pipelines
+- LangChain-compatible retrieval pipelines
 - LangSmith observability hooks
 - Hybrid dense + sparse retrieval
+- Reciprocal rank fusion
 - Source-grounded answer generation
 - Citation-aware responses
 - Hallucination mitigation
-- Evaluation-driven LLMOps
+- Compliance and safety routing
+- Synthetic evaluation datasets
+- Feedback capture for reviewed traces
+- Prompt registry and version notes
+- Runtime metrics endpoint
 - FastAPI-based AI service design
 - Dockerized local development
 - Cloud-ready architecture patterns
+- CI quality gates
 
-## Architecture
+## System Architecture
 
 ```mermaid
 flowchart LR
-    A[User Query] --> B[FastAPI]
-    B --> C[LangGraph Workflow]
-    C --> D[Intent Classifier]
-    D --> E[Query Rewriter]
-    E --> F[Retrieval Planner]
-    F --> G[Hybrid Retriever]
-    G --> H[Answer Generator]
-    H --> I[Guardrails]
-    I --> J[Response with Citations]
+    subgraph client["Client / Access Layer"]
+        user["User"]
+        apiClient["API Client / UI"]
+        user --> apiClient
+    end
+
+    subgraph app["Application / Service Layer"]
+        fastapi["FastAPI Service"]
+        validation["Request Validation"]
+        chat["POST /chat"]
+        ingest["POST /ingest"]
+        evaluate["POST /evaluate"]
+        documents["GET /documents"]
+        health["GET /health"]
+        feedback["POST /feedback"]
+        metrics["GET /metrics"]
+        prompts["GET /prompts"]
+        solutions["GET /solutions"]
+
+        fastapi --> validation
+        validation --> chat
+        validation --> ingest
+        validation --> evaluate
+        validation --> documents
+        validation --> health
+        validation --> feedback
+        validation --> metrics
+        validation --> prompts
+        validation --> solutions
+    end
+
+    subgraph orchestration["Orchestration Layer"]
+        graph["LangGraph Orchestrator"]
+        intent["Intent Classifier"]
+        rewrite["Query Rewriter + Expansion"]
+        planner["Retrieval Planner"]
+        retrieverNode["Retriever Node"]
+        answerGen["Answer Generator"]
+        hallucinationGuard["Hallucination Guard"]
+        safetyGuard["Compliance / Safety Guard"]
+        escalation["Insufficient Context Handler"]
+        responseBuilder["Response Builder"]
+
+        graph --> intent
+        intent -->|supported intent| rewrite
+        intent -->|unsupported intent| escalation
+        rewrite --> planner
+        planner --> retrieverNode
+        retrieverNode --> answerGen
+        answerGen --> hallucinationGuard
+        hallucinationGuard -->|grounded| safetyGuard
+        hallucinationGuard -->|unsupported| escalation
+        safetyGuard -->|passed| responseBuilder
+        safetyGuard -->|failed| escalation
+        escalation --> responseBuilder
+    end
+
+    subgraph retrieval["Retrieval Layer"]
+        hybrid["Hybrid Retrieval"]
+        dense["Dense Vector Retriever"]
+        sparse["Sparse BM25 Retriever"]
+        rrf["Reciprocal Rank Fusion"]
+        reranker["Optional Reranker"]
+        diagnostics["Retrieval Diagnostics"]
+        contextBuilder["Context Builder"]
+        citationBuilder["Citation Builder"]
+
+        hybrid --> dense
+        hybrid --> sparse
+        dense --> rrf
+        sparse --> rrf
+        rrf --> reranker
+        reranker --> diagnostics
+        diagnostics --> contextBuilder
+        contextBuilder --> citationBuilder
+    end
+
+    subgraph knowledge["Knowledge / Data Layer"]
+        syntheticDocs["Synthetic Documents"]
+        loaders["Document Loaders"]
+        normalization["Text Normalization"]
+        chunking["Chunking Pipeline"]
+        embeddings["Embedding Generation"]
+        vectorStore["Vector Store"]
+        metadataStore["Metadata Store"]
+
+        syntheticDocs --> loaders
+        loaders --> normalization
+        normalization --> chunking
+        chunking --> embeddings
+        embeddings --> vectorStore
+        chunking --> metadataStore
+    end
+
+    subgraph ai["LLM / AI Layer"]
+        llmProvider["LLM Provider Abstraction"]
+        embeddingModel["Embedding Model"]
+        responseGeneration["Response Generation"]
+        confidence["Confidence Scoring"]
+
+        embeddingModel --> embeddings
+        llmProvider --> responseGeneration
+        responseGeneration --> confidence
+    end
+
+    subgraph ops["Observability / Evaluation Layer"]
+        langsmith["LangSmith Tracing"]
+        logs["Structured Logging"]
+        evalDataset["Evaluation Dataset"]
+        retrievalMetrics["Retrieval Metrics"]
+        groundednessMetrics["Groundedness Metrics"]
+        citationCoverage["Citation Coverage"]
+        latency["Latency Tracking"]
+        feedbackStore["Feedback Store"]
+        promptRegistry["Prompt Registry"]
+    end
+
+    subgraph output["Output Layer"]
+        finalJson["Final JSON Response"]
+        answer["answer"]
+        citations["citations"]
+        strategy["retrieval_strategy"]
+        score["confidence_score"]
+        guardrailStatus["guardrail_status"]
+        traceId["trace_id"]
+
+        finalJson --> answer
+        finalJson --> citations
+        finalJson --> strategy
+        finalJson --> score
+        finalJson --> guardrailStatus
+        finalJson --> traceId
+    end
+
+    apiClient --> fastapi
+    chat --> graph
+    ingest --> loaders
+    evaluate --> evalDataset
+    documents --> metadataStore
+    feedback --> feedbackStore
+    metrics --> retrievalMetrics
+    prompts --> promptRegistry
+    solutions --> promptRegistry
+
+    planner --> hybrid
+    retrieverNode --> hybrid
+    vectorStore --> dense
+    metadataStore --> dense
+    metadataStore --> sparse
+    citationBuilder --> responseBuilder
+    answerGen --> llmProvider
+    confidence --> answerGen
+    responseBuilder --> finalJson
+    finalJson --> apiClient
+
+    fastapi -. logs .-> logs
+    fastapi -. telemetry .-> langsmith
+    graph -. trace metadata .-> langsmith
+    evaluate -. scoring .-> retrievalMetrics
+    evaluate -. scoring .-> groundednessMetrics
+    evaluate -. scoring .-> citationCoverage
+    evaluate -. timing .-> latency
 ```
 
-## LangGraph Workflow
+## Architecture Overview
 
-```mermaid
-flowchart TD
-    A[Intent Classifier] -->|supported| B[Query Rewriter]
-    A -->|unsupported| H[Escalation]
-    B --> C[Retrieval Planner]
-    C --> D[Retriever]
-    D -->|low confidence| H
-    D -->|context found| E[Answer Generator]
-    E --> F[Hallucination Guard]
-    F -->|failed| H
-    F -->|passed| G[Compliance Guard]
-    G -->|failed| H
-    G -->|passed| I[Grounded Response]
-    H --> J[Insufficient Context Response]
+FastAPI is the service boundary for the platform. It provides typed request validation, explicit route ownership, health checks, and a clean interface between external callers and the internal AI workflow.
+
+LangGraph is used for orchestration because Agentic RAG benefits from explicit state transitions. The workflow separates intent classification, query rewriting, retrieval planning, context retrieval, answer generation, grounding validation, safety checks, and escalation.
+
+Hybrid retrieval combines dense vector search with BM25 sparse retrieval. Dense search helps with semantic similarity, while sparse retrieval preserves exact-term recall for policy, checklist, and architecture questions. Reciprocal rank fusion merges both result sets into a single ranked context package.
+
+Guardrails are separate components so answer grounding, citation validity, and insufficient-context behavior can be tested and improved independently. LangSmith hooks, structured logging, runtime metrics, feedback capture, and synthetic evaluation support a production-style operating model for an Agentic RAG system.
+
+## Repository Structure
+
+```text
+backend/app/api          FastAPI route modules
+backend/app/agents       LangGraph workflow and node implementations
+backend/app/rag          ingestion, chunking, retrieval, citations, diagnostics
+backend/app/services     LLM, LangSmith, metrics, feedback, prompt registry
+backend/app/schemas      Pydantic request and response contracts
+backend/app/solutions    public-safe synthetic solution blueprints
+backend/app/evals        golden dataset and evaluation metrics
+data/synthetic_docs      synthetic demo knowledge corpus
+docs                     architecture, RAG design, deployment, playbooks
+scripts                  ingestion, evaluation, safety scan, data seeding
+.github/workflows        CI quality gates
 ```
+
+## API Surface
+
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Service health check |
+| `POST /ingest` | Ingest synthetic documents and build the local index |
+| `POST /chat` | Run the Agentic RAG workflow and return a grounded answer |
+| `POST /evaluate` | Run synthetic evaluation from golden questions |
+| `GET /documents` | List indexed document summaries |
+| `POST /feedback` | Capture trace-level reviewer feedback |
+| `GET /metrics` | Return lightweight runtime metrics |
+| `GET /prompts` | Show active prompt registry entries |
+| `GET /solutions` | List public-safe synthetic solution blueprints |
 
 ## Tech Stack
 
-Python 3.11+, FastAPI, LangChain, LangGraph, LangSmith, local Chroma-ready vector store abstraction, BM25 sparse retrieval, Pydantic v2, Docker, Docker Compose, Pytest, Ruff, and Black.
+Python 3.11+, FastAPI, Pydantic v2, LangChain, LangGraph, LangSmith, BM25 sparse retrieval, local vector store abstraction, Docker, Docker Compose, Pytest, Ruff, and Black.
 
 ## Setup
 
 ```bash
-git clone https://github.com/your-username/agentic-rag-intelligence-platform.git
+git clone https://github.com/shakehasan/agentic-rag-intelligence-platform.git
 cd agentic-rag-intelligence-platform
 cp .env.example .env
 docker-compose up --build
@@ -84,17 +269,37 @@ python scripts/ingest_docs.py
 uvicorn backend.app.main:app --reload
 ```
 
+On Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+python scripts\seed_synthetic_docs.py
+python scripts\ingest_docs.py
+uvicorn backend.app.main:app --reload
+```
+
 ## Environment Variables
 
 ```bash
-OPENAI_API_KEY=
+LLM_API_KEY=
+LLM_BASE_URL=
+LLM_MODEL=local-grounded-fallback
+API_KEY=
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=
 LANGCHAIN_PROJECT=agentic-rag-intelligence-platform
 VECTOR_DB=chroma
+VECTOR_INDEX_DIR=data/index
+SYNTHETIC_DOCS_DIR=data/synthetic_docs
+CHUNK_SIZE=900
+CHUNK_OVERLAP=140
+RETRIEVAL_TOP_K=6
+MIN_CONFIDENCE=0.35
 ```
 
-LangSmith tracing is optional. If `LANGCHAIN_API_KEY` is present, the app configures LangSmith-compatible tracing variables and includes metadata for query, intent, retrieval strategy, retrieved document count, confidence score, and guardrail status. Without a key, the app still runs locally.
+Tracing is optional. If `LANGCHAIN_API_KEY` is present, the app configures LangSmith-compatible tracing variables and includes metadata for query, intent, retrieval strategy, retrieved document count, confidence score, and guardrail status. Without a key, the app still runs locally using the free deterministic fallback path.
 
 ## API Examples
 
@@ -115,6 +320,18 @@ curl -X POST http://localhost:8000/chat \
 ```
 
 ```bash
+curl -X POST http://localhost:8000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"trace_id":"demo-trace-123","query":"What does the AI governance policy say about human review?","signal":"helpful"}'
+```
+
+```bash
+curl http://localhost:8000/metrics
+curl http://localhost:8000/prompts
+curl http://localhost:8000/solutions
+```
+
+```bash
 curl -X POST http://localhost:8000/evaluate \
   -H "Content-Type: application/json" \
   -d '{"limit": 5}'
@@ -126,6 +343,7 @@ curl -X POST http://localhost:8000/evaluate \
 - Summarize the QA automation strategy.
 - What are the release readiness requirements?
 - Compare the cloud deployment checklist and security review checklist.
+- How should product teams handle privacy reviews?
 - What happens if the assistant does not have enough context?
 
 ## Sample Response
@@ -156,6 +374,23 @@ curl -X POST http://localhost:8000/evaluate \
 }
 ```
 
+## Solution Blueprints
+
+The `/solutions` endpoint presents public-safe synthetic blueprints that show how the platform pattern can be reused across knowledge intelligence workflows:
+
+- AI Governance Policy Intelligence
+- Release Readiness Copilot
+- Cloud Deployment Advisor
+- QA Strategy Intelligence
+- Privacy Review Assistant
+- Incident Review Assistant
+- Support Triage Assistant
+- Architecture Explainer
+- Security Review Assistant
+- Vendor Evaluation Assistant
+
+Each blueprint includes a problem statement, architecture pattern, capabilities, evaluation focus, and public-safe note.
+
 ## Evaluation
 
 Run:
@@ -164,16 +399,27 @@ Run:
 python scripts/run_eval.py
 ```
 
-The evaluation layer writes `eval_results.json` and `eval_report.md`, then reports retrieval hit rate, citation coverage, groundedness, unsupported answer rate, and latency. The goal is not a perfect benchmark; it is a clear LLMOps loop for measuring retrieval and answer behavior against synthetic golden questions.
+The evaluation layer writes `eval_results.json` and `eval_report.md`, then reports retrieval hit rate, citation coverage, groundedness, unsupported answer rate, and latency. The goal is a clear LLMOps loop for measuring retrieval and answer behavior against synthetic golden questions.
+
+## Quality Gates
+
+```bash
+python scripts/public_safety_scan.py
+ruff check .
+pytest
+python scripts/run_eval.py
+```
+
+The GitHub Actions workflow runs public safety scanning, linting, and tests on pushes and pull requests.
 
 ## Production Considerations
 
 - Managed vector database
 - API authentication
 - Role-based access control
-- Secrets management
-- CI/CD
-- Monitoring
+- Managed secrets
+- CI/CD quality gates
+- Centralized monitoring
 - Evaluation datasets
 - Prompt and version management
 - Human feedback loop
@@ -181,22 +427,10 @@ The evaluation layer writes `eval_results.json` and `eval_report.md`, then repor
 
 ## Cloud Deployment Pattern
 
-A generic AWS or Azure pattern would run the FastAPI service as a container, use managed secrets, connect to a managed vector database, centralize logs, and publish observability signals for latency, retrieval quality, confidence score, and guardrail outcomes. A CI/CD pipeline would run tests, safety scan, evaluation, image build, and deployment promotion.
+A generic cloud pattern would run the FastAPI service as a container, use managed secrets, connect to a managed vector database, centralize logs, and publish observability signals for latency, retrieval quality, confidence score, and guardrail outcomes. A CI/CD pipeline would run tests, safety scan, evaluation, image build, and deployment promotion.
 
 ## Project Summary
 
-I created this project to demonstrate a production-style Agentic RAG platform using fully synthetic data. The implementation separates the API boundary, LangGraph orchestration, hybrid retrieval, grounded response generation, guardrails, observability, and evaluation into clear system layers.
+I created this project to demonstrate a production-style Agentic RAG platform using fully synthetic data. The implementation separates the API boundary, LangGraph orchestration, hybrid retrieval, grounded response generation, guardrails, observability, evaluation, feedback capture, and prompt management into clear system layers.
 
 I built the workflow so each request moves through intent classification, retrieval planning, context assembly, answer generation, validation, and response construction. Unsupported or low-confidence requests return an insufficient-context response with trace metadata instead of unsupported citations.
-
-## Roadmap
-
-- Multi-tenant document spaces
-- Role-based document access
-- Advanced reranking
-- Human feedback collection
-- LangSmith dataset evaluation
-- Redis semantic cache
-- Streaming responses
-- Next.js frontend
-- Cloud deployment templates

@@ -10,9 +10,10 @@ class Settings(BaseSettings):
     environment: str = "local"
     log_level: str = "INFO"
 
-    openai_api_key: str | None = None
-    openai_base_url: str | None = None
-    openai_model: str = "gpt-4o-mini"
+    llm_api_key: str | None = None
+    llm_base_url: str | None = None
+    llm_model: str = "local-grounded-fallback"
+    api_key: str | None = None
 
     langchain_tracing_v2: bool = False
     langchain_api_key: str | None = None
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
     min_confidence: float = 0.35
     hybrid_dense_weight: float = Field(default=0.55, ge=0.0, le=1.0)
     hybrid_sparse_weight: float = Field(default=0.45, ge=0.0, le=1.0)
+    max_feedback_items: int = 1000
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -39,4 +41,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
