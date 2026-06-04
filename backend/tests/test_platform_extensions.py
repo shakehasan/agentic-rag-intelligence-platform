@@ -17,6 +17,16 @@ def test_solution_catalog_endpoint() -> None:
     assert payload["solutions"][0]["public_safe_note"]
 
 
+def test_benchmark_catalog_endpoint() -> None:
+    response = client.get("/benchmarks?limit=10&document_type=policy")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_returned"] == 10
+    assert payload["summary"]["total_cases"] >= 500
+    assert all(case["expected_document_type"] == "policy" for case in payload["cases"])
+
+
 def test_prompt_registry_endpoint() -> None:
     response = client.get("/prompts")
 
@@ -80,4 +90,3 @@ def test_retrieval_diagnostics_summarize_results() -> None:
     assert summary["result_count"] == 1
     assert summary["top_source"] == "release_readiness_checklist.md"
     assert risks == []
-

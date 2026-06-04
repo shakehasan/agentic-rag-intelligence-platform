@@ -1,10 +1,28 @@
 # Agentic RAG Intelligence Platform
 
-A production-style LangGraph, LangChain, LangSmith, and RAG system for source-grounded enterprise knowledge intelligence using fully synthetic data.
+[![CI](https://github.com/shakehasan/agentic-rag-intelligence-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/shakehasan/agentic-rag-intelligence-platform/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB)
+![FastAPI](https://img.shields.io/badge/FastAPI-Service-009688)
+![LangGraph](https://img.shields.io/badge/LangGraph-Orchestration-1F6FEB)
+![RAG](https://img.shields.io/badge/RAG-Hybrid%20Retrieval-6F42C1)
+![Runtime](https://img.shields.io/badge/Runtime-Free%20Local-2EA043)
 
-I created this project as a public-safe AI engineering portfolio system. It demonstrates how a modern Agentic RAG platform can orchestrate retrieval, answer generation, guardrails, observability, evaluation, and feedback without relying on private organization data.
+**Author:** Shake Hasan
 
-The default runtime is free and local. It uses deterministic local embeddings and an extractive grounded-answer fallback, so no paid API key or hosted service is required to run the demo.
+A production-style LangGraph, LangChain, LangSmith, and RAG system for source-grounded knowledge intelligence using fully synthetic data.
+
+I created this project as a public-safe AI engineering system. It demonstrates how a modern Agentic RAG platform can orchestrate retrieval, answer generation, guardrails, observability, evaluation, and feedback without relying on private organization data.
+
+The default runtime is free and local. It uses deterministic local embeddings and an extractive grounded-answer fallback, so no external API key or hosted service is required to run the demo.
+
+```mermaid
+flowchart LR
+    local["Free Local Runtime"] --> api["FastAPI Service"]
+    api --> graph["LangGraph Workflow"]
+    graph --> retrieval["Hybrid Retrieval"]
+    retrieval --> guardrails["Grounding + Safety Checks"]
+    guardrails --> response["JSON Response with Citations"]
+```
 
 ## Public-Safe Demo Notice
 
@@ -14,7 +32,7 @@ This repository uses only synthetic demo documents. It does not include workplac
 
 Modern LLM applications need more than a prompt and a vector database. Production-grade AI systems require retrieval orchestration, graph-based workflows, source grounding, evaluation, observability, guardrails, failure handling, feedback capture, and quality gates.
 
-This project demonstrates those patterns in a public-safe portfolio environment.
+This project demonstrates those patterns in a public-safe demonstration environment.
 
 ## What This Demonstrates
 
@@ -32,10 +50,24 @@ This project demonstrates those patterns in a public-safe portfolio environment.
 - Feedback capture for reviewed traces
 - Prompt registry and version notes
 - Runtime metrics endpoint
+- 560-case synthetic benchmark bank
 - FastAPI-based AI service design
 - Dockerized local development
 - Cloud-ready architecture patterns
 - CI quality gates
+
+## Free Local Runtime
+
+The repository is designed to run locally with free tooling:
+
+- Local deterministic embeddings
+- Local extractive grounded-answer fallback
+- Local JSON vector index
+- Local synthetic documents
+- Local tests and evaluation scripts
+- Optional tracing only when a tracing key is configured
+
+No external model key is required for the default demo path.
 
 ## System Architecture
 
@@ -244,6 +276,7 @@ scripts                  ingestion, evaluation, safety scan, data seeding
 | `GET /metrics` | Return lightweight runtime metrics |
 | `GET /prompts` | Show active prompt registry entries |
 | `GET /solutions` | List public-safe synthetic solution blueprints |
+| `GET /benchmarks` | List synthetic benchmark cases for retrieval and guardrail testing |
 
 ## Tech Stack
 
@@ -329,6 +362,7 @@ curl -X POST http://localhost:8000/feedback \
 curl http://localhost:8000/metrics
 curl http://localhost:8000/prompts
 curl http://localhost:8000/solutions
+curl "http://localhost:8000/benchmarks?limit=10&document_type=policy"
 ```
 
 ```bash
@@ -390,6 +424,27 @@ The `/solutions` endpoint presents public-safe synthetic blueprints that show ho
 - Vendor Evaluation Assistant
 
 Each blueprint includes a problem statement, architecture pattern, capabilities, evaluation focus, and public-safe note.
+
+## Benchmark Bank
+
+The `/benchmarks` endpoint exposes a 560-case synthetic benchmark bank for retrieval, guardrail, and response behavior testing. The cases are generic, public-safe, and free to run locally.
+
+```mermaid
+flowchart TD
+    cases["Synthetic Benchmark Cases"] --> filters["Document Type + Difficulty Filters"]
+    filters --> retrieval["Retrieval Regression Checks"]
+    filters --> guardrails["Guardrail Behavior Checks"]
+    filters --> latency["Latency Tracking"]
+    retrieval --> report["Evaluation Report"]
+    guardrails --> report
+    latency --> report
+```
+
+Example:
+
+```bash
+curl "http://localhost:8000/benchmarks?limit=25&difficulty=advanced"
+```
 
 ## Evaluation
 

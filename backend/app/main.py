@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api import (
+    routes_benchmarks,
     routes_chat,
     routes_documents,
     routes_eval,
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(routes_health.router)
+    app.include_router(routes_benchmarks.router)
     app.include_router(routes_ingestion.router)
     app.include_router(routes_chat.router)
     app.include_router(routes_eval.router)

@@ -1,6 +1,6 @@
 # Public Safety Statement
 
-This repository is a public-safe portfolio project. All data is synthetic and used only for educational and portfolio demonstration.
+This repository is a public-safe demonstration project. All data is synthetic and used only for educational demonstration.
 
 No workplace data, named-customer data, private system details, sensitive source material, or real organization documents are included.
 

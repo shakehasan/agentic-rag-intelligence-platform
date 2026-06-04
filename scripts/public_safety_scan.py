@@ -121,7 +121,7 @@ def _is_skipped_directory(path: Path, root: Path) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Scan public portfolio files for unsafe terms.")
+    parser = argparse.ArgumentParser(description="Scan public repository files for unsafe terms.")
     parser.add_argument("root", nargs="?", default=".", help="Repository root to scan.")
     args = parser.parse_args()
     findings = scan_root(Path(args.root))

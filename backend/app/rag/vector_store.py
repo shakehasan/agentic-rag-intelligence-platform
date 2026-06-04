@@ -10,7 +10,7 @@ from .embeddings import HashingEmbeddingModel, cosine_similarity
 
 
 class LocalVectorStore:
-    """Small persistent vector store used for local portfolio runs.
+    """Small persistent vector store used for local demo runs.
 
     The code path is intentionally simple and deterministic. The project is configured so this
     class can be swapped for Chroma or Qdrant in a deployed environment.
@@ -99,4 +99,3 @@ def _matches_filters(chunk: DocumentChunk, filters: dict[str, str]) -> bool:
 def _excerpt(text: str, limit: int = 420) -> str:
     compact = " ".join(text.split())
     return compact if len(compact) <= limit else f"{compact[: limit - 3]}..."
-
