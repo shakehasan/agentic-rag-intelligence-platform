@@ -72,169 +72,82 @@ No external model key is required for the default demo path.
 ## System Architecture
 
 ```mermaid
-flowchart LR
-    subgraph client["Client / Access Layer"]
-        user["User"]
-        apiClient["API Client / UI"]
-        user --> apiClient
+flowchart TD
+    user["User"] --> client["API Client or UI"]
+    client --> service["FastAPI Service"]
+
+    subgraph appLayer["Application and API Layer"]
+        service --> validation["Typed Request Validation"]
+        validation --> chatRoute["POST /chat"]
+        validation --> ingestRoute["POST /ingest"]
+        validation --> evalRoute["POST /evaluate"]
+        validation --> docsRoute["GET /documents"]
+        validation --> healthRoute["GET /health"]
     end
 
-    subgraph app["Application / Service Layer"]
-        fastapi["FastAPI Service"]
-        validation["Request Validation"]
-        chat["POST /chat"]
-        ingest["POST /ingest"]
-        evaluate["POST /evaluate"]
-        documents["GET /documents"]
-        health["GET /health"]
-        feedback["POST /feedback"]
-        metrics["GET /metrics"]
-        prompts["GET /prompts"]
-        solutions["GET /solutions"]
-
-        fastapi --> validation
-        validation --> chat
-        validation --> ingest
-        validation --> evaluate
-        validation --> documents
-        validation --> health
-        validation --> feedback
-        validation --> metrics
-        validation --> prompts
-        validation --> solutions
+    subgraph workflowLayer["LangGraph Orchestration"]
+        chatRoute --> orchestrator["LangGraph Orchestrator"]
+        orchestrator --> intent["Intent Classification"]
+        intent --> rewrite["Query Rewrite"]
+        rewrite --> plan["Retrieval Plan"]
+        plan --> retrieve["Retrieve Context"]
+        retrieve --> draft["Grounded Answer Draft"]
+        draft --> guardrails["Grounding and Safety Checks"]
+        guardrails --> builder["Response Builder"]
+        intent -->|unsupported| fallback["Insufficient Context Handler"]
+        guardrails -->|not grounded| fallback
+        fallback --> builder
     end
 
-    subgraph orchestration["Orchestration Layer"]
-        orchestrator["LangGraph Orchestrator"]
-        intent["Intent Classifier"]
-        rewrite["Query Rewriter + Expansion"]
-        planner["Retrieval Planner"]
-        retrieverNode["Retriever Node"]
-        answerGen["Answer Generator"]
-        hallucinationGuard["Hallucination Guard"]
-        safetyGuard["Compliance / Safety Guard"]
-        escalation["Insufficient Context Handler"]
-        responseBuilder["Response Builder"]
-
-        orchestrator --> intent
-        intent -->|supported intent| rewrite
-        intent -->|unsupported intent| escalation
-        rewrite --> planner
-        planner --> retrieverNode
-        retrieverNode --> answerGen
-        answerGen --> hallucinationGuard
-        hallucinationGuard -->|grounded| safetyGuard
-        hallucinationGuard -->|unsupported| escalation
-        safetyGuard -->|passed| responseBuilder
-        safetyGuard -->|failed| escalation
-        escalation --> responseBuilder
+    subgraph retrievalLayer["Hybrid Retrieval Layer"]
+        retrieve --> hybrid["Hybrid Retriever"]
+        hybrid --> dense["Dense Vector Search"]
+        hybrid --> sparse["BM25 Sparse Search"]
+        dense --> fusion["Reciprocal Rank Fusion"]
+        sparse --> fusion
+        fusion --> context["Ranked Context"]
+        context --> citations["Citation Builder"]
+        citations --> draft
     end
 
-    subgraph retrieval["Retrieval Layer"]
-        hybrid["Hybrid Retrieval"]
-        dense["Dense Vector Retriever"]
-        sparse["Sparse BM25 Retriever"]
-        rrf["Reciprocal Rank Fusion"]
-        reranker["Optional Reranker"]
-        diagnostics["Retrieval Diagnostics"]
-        contextBuilder["Context Builder"]
-        citationBuilder["Citation Builder"]
-
-        hybrid --> dense
-        hybrid --> sparse
-        dense --> rrf
-        sparse --> rrf
-        rrf --> reranker
-        reranker --> diagnostics
-        diagnostics --> contextBuilder
-        contextBuilder --> citationBuilder
+    subgraph dataLayer["Knowledge and Indexing Layer"]
+        docs["Synthetic Documents"] --> loaders["Document Loaders"]
+        ingestRoute --> loaders
+        loaders --> normalize["Normalize Text"]
+        normalize --> chunks["Chunk Documents"]
+        chunks --> embed["Generate Embeddings"]
+        embed --> vectors["Vector Index"]
+        chunks --> metadata["Metadata Index"]
+        vectors --> dense
+        metadata --> sparse
+        docsRoute --> metadata
     end
 
-    subgraph knowledge["Knowledge / Data Layer"]
-        syntheticDocs["Synthetic Documents"]
-        loaders["Document Loaders"]
-        normalization["Text Normalization"]
-        chunking["Chunking Pipeline"]
-        embeddings["Embedding Generation"]
-        vectorStore["Vector Store"]
-        metadataStore["Metadata Store"]
-
-        syntheticDocs --> loaders
-        loaders --> normalization
-        normalization --> chunking
-        chunking --> embeddings
-        embeddings --> vectorStore
-        chunking --> metadataStore
+    subgraph modelLayer["Model and Scoring Layer"]
+        provider["LLM Provider Abstraction"] --> draft
+        localEmbed["Local Embedding Model"] --> embed
+        draft --> confidence["Confidence Scoring"]
+        confidence --> guardrails
     end
 
-    subgraph ai["LLM / AI Layer"]
-        llmProvider["LLM Provider Abstraction"]
-        embeddingModel["Embedding Model"]
-        responseGeneration["Response Generation"]
-        confidence["Confidence Scoring"]
-
-        embeddingModel --> embeddings
-        llmProvider --> responseGeneration
-        responseGeneration --> confidence
+    subgraph qualityLayer["Observability and Evaluation"]
+        traces["LangSmith-Compatible Traces"]
+        logs["Structured Logs"]
+        benchmarks["Synthetic Benchmark Bank"]
+        metrics["Quality Metrics"]
+        evalRoute --> benchmarks
+        benchmarks --> metrics
+        service -.-> logs
+        orchestrator -.-> traces
+        builder -.-> metrics
     end
 
-    subgraph ops["Observability / Evaluation Layer"]
-        langsmith["LangSmith Tracing"]
-        logs["Structured Logging"]
-        evalDataset["Evaluation Dataset"]
-        retrievalMetrics["Retrieval Metrics"]
-        groundednessMetrics["Groundedness Metrics"]
-        citationCoverage["Citation Coverage"]
-        latency["Latency Tracking"]
-        feedbackStore["Feedback Store"]
-        promptRegistry["Prompt Registry"]
-    end
+    builder --> response["Grounded JSON Response"]
+    response --> delivered["Returned to API Client or UI"]
 
-    subgraph output["Output Layer"]
-        finalJson["Final JSON Response"]
-        answer["answer"]
-        citations["citations"]
-        strategy["retrieval_strategy"]
-        score["confidence_score"]
-        guardrailStatus["guardrail_status"]
-        traceId["trace_id"]
-
-        finalJson --> answer
-        finalJson --> citations
-        finalJson --> strategy
-        finalJson --> score
-        finalJson --> guardrailStatus
-        finalJson --> traceId
-    end
-
-    apiClient --> fastapi
-    chat --> orchestrator
-    ingest --> loaders
-    evaluate --> evalDataset
-    documents --> metadataStore
-    feedback --> feedbackStore
-    metrics --> retrievalMetrics
-    prompts --> promptRegistry
-    solutions --> promptRegistry
-
-    planner --> hybrid
-    retrieverNode --> hybrid
-    vectorStore --> dense
-    metadataStore --> dense
-    metadataStore --> sparse
-    citationBuilder --> responseBuilder
-    answerGen --> llmProvider
-    confidence --> answerGen
-    responseBuilder --> finalJson
-    finalJson --> apiClient
-
-    fastapi -. logs .-> logs
-    fastapi -. telemetry .-> langsmith
-    orchestrator -. trace metadata .-> langsmith
-    evaluate -. scoring .-> retrievalMetrics
-    evaluate -. scoring .-> groundednessMetrics
-    evaluate -. scoring .-> citationCoverage
-    evaluate -. timing .-> latency
+    response --> answerField["answer"]
+    response --> citationField["citations"]
+    response --> traceField["strategy, confidence, guardrails, trace"]
 ```
 
 ## Architecture Overview
