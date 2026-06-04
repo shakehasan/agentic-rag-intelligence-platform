@@ -402,3 +402,11 @@ A generic cloud pattern would run the FastAPI service as a container, use manage
 I created this project to demonstrate a production-style Agentic RAG platform using fully synthetic data. The implementation separates the API boundary, LangGraph orchestration, hybrid retrieval, grounded response generation, guardrails, observability, evaluation, feedback capture, and prompt management into clear system layers.
 
 I built the workflow so each request moves through intent classification, retrieval planning, context assembly, answer generation, validation, and response construction. Unsupported or low-confidence requests return an insufficient-context response with trace metadata instead of unsupported citations.
+
+## Author
+
+Shake Hasan
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
