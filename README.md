@@ -18,8 +18,8 @@ The default runtime is free and local. It uses deterministic local embeddings an
 ```mermaid
 flowchart LR
     local["Free Local Runtime"] --> api["FastAPI Service"]
-    api --> graph["LangGraph Workflow"]
-    graph --> retrieval["Hybrid Retrieval"]
+    api --> workflow["LangGraph Workflow"]
+    workflow --> retrieval["Hybrid Retrieval"]
     retrieval --> guardrails["Grounding + Safety Checks"]
     guardrails --> response["JSON Response with Citations"]
 ```
@@ -105,7 +105,7 @@ flowchart LR
     end
 
     subgraph orchestration["Orchestration Layer"]
-        graph["LangGraph Orchestrator"]
+        orchestrator["LangGraph Orchestrator"]
         intent["Intent Classifier"]
         rewrite["Query Rewriter + Expansion"]
         planner["Retrieval Planner"]
@@ -116,7 +116,7 @@ flowchart LR
         escalation["Insufficient Context Handler"]
         responseBuilder["Response Builder"]
 
-        graph --> intent
+        orchestrator --> intent
         intent -->|supported intent| rewrite
         intent -->|unsupported intent| escalation
         rewrite --> planner
@@ -208,7 +208,7 @@ flowchart LR
     end
 
     apiClient --> fastapi
-    chat --> graph
+    chat --> orchestrator
     ingest --> loaders
     evaluate --> evalDataset
     documents --> metadataStore
@@ -230,7 +230,7 @@ flowchart LR
 
     fastapi -. logs .-> logs
     fastapi -. telemetry .-> langsmith
-    graph -. trace metadata .-> langsmith
+    orchestrator -. trace metadata .-> langsmith
     evaluate -. scoring .-> retrievalMetrics
     evaluate -. scoring .-> groundednessMetrics
     evaluate -. scoring .-> citationCoverage
